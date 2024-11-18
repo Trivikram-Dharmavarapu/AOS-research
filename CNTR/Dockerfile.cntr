@@ -1,0 +1,22 @@
+# Base image: Docker in Docker
+FROM docker:latest
+
+# Install dependencies for CNTR and FUSE support
+RUN apk update && \
+    apk add --no-cache fuse fuse-overlayfs git curl bash rust cargo && \
+    mkdir -p /etc/fuse
+
+# Install CNTR from the latest source on GitHub
+RUN git clone https://github.com/Mic92/cntr.git /opt/cntr && \
+    cd /opt/cntr && \
+    cargo install --path .  # Install CNTR using Cargo
+
+# Configure FUSE to allow user access and add CNTR to PATH
+RUN echo 'user_allow_other' >> /etc/fuse.conf
+ENV PATH="/root/.cargo/bin:${PATH}"
+
+# Copy Dockerfiles for slim and fat containers, along with application script
+COPY workspace /workspace
+
+# Start Docker daemon on container startup and keep it running
+ENTRYPOINT ["sh", "-c", "dockerd & while (! docker stats --no-stream ); do sleep 1; done; tail -f /dev/null"]

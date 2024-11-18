@@ -1,0 +1,16 @@
+version: '3.8'
+
+services:
+  dind-container:
+    build:
+      context: .
+      dockerfile: Dockerfile.cntr
+    image: cntr-dind-container
+    container_name: dind-container
+    privileged: true
+    cap_add:
+      - SYS_ADMIN
+    devices:
+      - /dev/fuse
+    volumes:
+      - ./workspace:/workspace

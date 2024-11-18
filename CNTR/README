@@ -1,0 +1,37 @@
+docker-compose build
+docker-compose up -d
+docker exec -it dind-container /bin/sh
+
+To verify CNTR:
+--------------
+ cntr --version
+
+To verify FSUE:
+--------------
+mkdir -p /mnt/fuse-test/lower /mnt/fuse-test/upper /mnt/fuse-test/work /mnt/fuse-test/merged
+echo "Hello, FUSE!" > /mnt/fuse-test/upper/testfile.txt
+fuse-overlayfs -o lowerdir=/mnt/fuse-test/lower,upperdir=/mnt/fuse-test/upper,workdir=/mnt/fuse-test/work /mnt/fuse-test/merged
+ls /mnt/fuse-test/merged
+
+# Clean up
+
+umount -l /mnt/fuse-test/merged
+rm -rf /mnt/fuse-test
+
+Running:
+cd workspace/
+docker build -f Dockerfile.slim -t apache-slim .
+docker run -d --name apache-slim -p 8081:80 apache-slim
+
+docker build -f Dockerfile.fat -t apache-fat .
+cntr attach apache-slim --fat=apache-fat
+
+
+//
+docker network create my-network
+docker run -d --name apache-slim --network my-network -p 8081:80 slim-container
+docker run -d --name apache-fat --network my-network apache-fat
+docker exec -it apache-fat ab -n 1000 -c 10 http://apache-slim:80/
+
+
+

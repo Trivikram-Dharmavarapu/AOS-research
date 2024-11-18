@@ -1,0 +1,6 @@
+docker build -t monolithic-app -f Dockerfile.monolithic .
+docker run -d --name monolithic-app -p 8080:80 monolithic-app
+
+docker exec -it monolithic-app /bin/sh
+
+ab -n 10000 -c 100 http://localhost/

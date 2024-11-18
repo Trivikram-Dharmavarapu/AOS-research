@@ -1,0 +1,8 @@
+# Base image using Apache HTTP server
+FROM httpd:latest
+
+# Expose the default Apache port
+EXPOSE 80
+
+# Start Apache
+CMD ["httpd-foreground"]

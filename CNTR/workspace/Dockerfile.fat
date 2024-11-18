@@ -1,0 +1,8 @@
+# Base image using Apache HTTP server
+FROM httpd:latest
+
+# Install debugging, monitoring, and testing tools
+RUN apt-get update && \
+    apt-get install -y curl htop apache2-utils && \
+    apt-get clean
+
