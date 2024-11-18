@@ -25,14 +25,20 @@ without CNTR:
     cd workspace/
     docker build -t slim-sqlite -f Dockerfile.slim .
     docker run -d --name slim-sqlite slim-sqlite
-    docker exec slim-sqlite /usr/bin/time -v /workload.sh > slim_without_cntr_metrics.log 2>&1
+    docker exec slim-sqlite /usr/bin/time -v /workload.sh > slim.log 2>&1
+
+    docker exec -it slim-sqlite phoronix-test-suite batch-setup # To save settings
+    docker exec slim-sqlite phoronix-test-suite run pts/fio
+    docker exec slim-sqlite phoronix-test-suite show-result pts-fio
+
+
 
 With CNTR:
 
     docker build -t fat-debug -f Dockerfile.fat .
     docker run -d --name fat-debug fat-debug
     cntr attach slim-sqlite fat-debug
-    docker exec slim-sqlite /usr/bin/time -v /workload.sh > slim_with_cntr_metrics.log 2>&1
+    docker exec slim-sqlite /usr/bin/time -v /workload.sh > slim_with_fat.log 2>&1
 
 Dcoker Cleanup:
 
@@ -46,6 +52,7 @@ Other docker commands:
 
     docker stop <container>
     docker rm <container>
+
 
 
 

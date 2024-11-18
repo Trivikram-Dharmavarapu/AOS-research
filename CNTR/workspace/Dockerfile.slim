@@ -1,10 +1,15 @@
 # Base image using a lightweight Linux distribution
 FROM debian:latest
 
-# Install SQLite and time utility
+# Install dependencies
 RUN apt-get update && \
-    apt-get install -y sqlite3 time && \
+    apt-get install -y sqlite3 curl unzip git php-cli php-xml && \
     apt-get clean
+
+# Download and install Phoronix Test Suite
+RUN curl -L https://phoronix-test-suite.com/releases/repo/pts.debian/files/phoronix-test-suite_10.8.3_all.deb -o /tmp/phoronix-test-suite.deb && \
+    apt-get install -y /tmp/phoronix-test-suite.deb && \
+    rm /tmp/phoronix-test-suite.deb
 
 # Copy the workload script
 COPY workload.sh /workload.sh

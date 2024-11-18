@@ -1,16 +1,13 @@
 # Base image using a lightweight Linux distribution
 FROM debian:latest
 
-# Install SQLite
+# Install Phoronix Test Suite, debugging tools, and dependencies
 RUN apt-get update && \
-    apt-get install -y sqlite3 && \
+    apt-get install -y sqlite3 phoronix-test-suite curl unzip git gdb strace && \
     apt-get clean
 
-# Copy the workload script
-COPY workload.sh /workload.sh
+# Add debugging tools to PATH for CNTR usage
+ENV PATH="/usr/bin:${PATH}"
 
-# Make the script executable
-RUN chmod +x /workload.sh
-
-# Start a bash shell by default
-ENTRYPOINT ["sh", "-c", "/workload.sh; tail -f /dev/null"]
+# Keep the container running indefinitely
+ENTRYPOINT ["sh", "-c", "tail -f /dev/null"]
