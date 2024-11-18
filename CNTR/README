@@ -21,24 +21,29 @@ rm -rf /mnt/fuse-test
 Running:
 -------
 
-without CNTR:
+with SLIM:
     cd workspace/
     docker build -t slim-sqlite -f Dockerfile.slim .
     docker run -d --name slim-sqlite slim-sqlite
     docker exec slim-sqlite /usr/bin/time -v /workload.sh > slim.log 2>&1
 
-    docker exec -it slim-sqlite phoronix-test-suite batch-setup # To save settings
-    docker exec slim-sqlite phoronix-test-suite run pts/fio
+    phoronix-test:
+    -------------
+    docker exec slim-sqlite phoronix-test-suite openbenchmarking-cli run pts/stream --options="1,2" --max-runs=1
+    docker exec -it slim-sqlite phoronix-test-suite batch-setup # To save settings (Y,n,n,n,n,n,)
+    docker exec slim-sqlite phoronix-test-suite batch-run pts/stream --options="1,2"
     docker exec slim-sqlite phoronix-test-suite show-result pts-fio
 
 
 
-With CNTR:
+With SLIM + FAT (with debugging tools):
 
     docker build -t fat-debug -f Dockerfile.fat .
     docker run -d --name fat-debug fat-debug
     cntr attach slim-sqlite fat-debug
     docker exec slim-sqlite /usr/bin/time -v /workload.sh > slim_with_fat.log 2>&1
+
+    #
 
 Dcoker Cleanup:
 
@@ -52,12 +57,6 @@ Other docker commands:
 
     docker stop <container>
     docker rm <container>
-
-
-
-
-
-
 
 
 //
