@@ -1,8 +1,16 @@
-# Base image using Apache HTTP server
-FROM httpd:latest
+# Base image using a lightweight Linux distribution
+FROM debian:latest
 
-# Install debugging, monitoring, and testing tools
+# Install SQLite
 RUN apt-get update && \
-    apt-get install -y curl htop apache2-utils && \
+    apt-get install -y sqlite3 && \
     apt-get clean
 
+# Copy the workload script
+COPY workload.sh /workload.sh
+
+# Make the script executable
+RUN chmod +x /workload.sh
+
+# Start a bash shell by default
+ENTRYPOINT ["sh", "-c", "/workload.sh; tail -f /dev/null"]

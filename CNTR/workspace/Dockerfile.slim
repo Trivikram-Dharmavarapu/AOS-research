@@ -1,8 +1,16 @@
-# Base image using Apache HTTP server
-FROM httpd:latest
+# Base image using a lightweight Linux distribution
+FROM debian:latest
 
-# Expose the default Apache port
-EXPOSE 80
+# Install SQLite and time utility
+RUN apt-get update && \
+    apt-get install -y sqlite3 time && \
+    apt-get clean
 
-# Start Apache
-CMD ["httpd-foreground"]
+# Copy the workload script
+COPY workload.sh /workload.sh
+
+# Make the script executable
+RUN chmod +x /workload.sh
+
+# Keep the container running indefinitely
+ENTRYPOINT ["sh", "-c", "/workload.sh; tail -f /dev/null"]

@@ -19,12 +19,38 @@ umount -l /mnt/fuse-test/merged
 rm -rf /mnt/fuse-test
 
 Running:
-cd workspace/
-docker build -f Dockerfile.slim -t apache-slim .
-docker run -d --name apache-slim -p 8081:80 apache-slim
+-------
 
-docker build -f Dockerfile.fat -t apache-fat .
-cntr attach apache-slim --fat=apache-fat
+without CNTR:
+    cd workspace/
+    docker build -t slim-sqlite -f Dockerfile.slim .
+    docker run -d --name slim-sqlite slim-sqlite
+    docker exec slim-sqlite /usr/bin/time -v /workload.sh > slim_without_cntr_metrics.log 2>&1
+
+With CNTR:
+
+    docker build -t fat-debug -f Dockerfile.fat .
+    docker run -d --name fat-debug fat-debug
+    cntr attach slim-sqlite fat-debug
+    docker exec slim-sqlite /usr/bin/time -v /workload.sh > slim_with_cntr_metrics.log 2>&1
+
+Dcoker Cleanup:
+
+    docker stop slim-sqlite fat-debug
+    docker rm slim-sqlite fat-debug
+    docker rmi slim-sqlite fat-debug
+    docker volume prune -f
+
+
+Other docker commands:
+
+    docker stop <container>
+    docker rm <container>
+
+
+
+
+
 
 
 //
