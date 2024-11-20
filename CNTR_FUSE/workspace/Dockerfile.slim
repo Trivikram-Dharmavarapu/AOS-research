@@ -1,0 +1,14 @@
+FROM debian:latest
+
+RUN apt-get update && apt-get install -y --no-install-recommends sqlite3 curl php-cli php-xml time ca-certificates openssl unzip && apt-get clean && rm -rf /var/lib/apt/lists/* /tmp/* /var/tmp/* && \
+    curl -L https://phoronix-test-suite.com/releases/repo/pts.debian/files/phoronix-test-suite_10.8.3_all.deb -o /tmp/phoronix-test-suite.deb && \
+    dpkg -i /tmp/phoronix-test-suite.deb || apt-get install -f -y && \
+    rm -rf /tmp/phoronix-test-suite.deb && \
+    rm -rf /var/lib/phoronix-test-suite/test-results/*
+
+ENV PATH="/usr/share/phoronix-test-suite/:$PATH"
+
+COPY workload.sh /workload.sh
+RUN chmod +x /workload.sh
+
+ENTRYPOINT ["sh", "-c", "/workload.sh; tail -f /dev/null"]

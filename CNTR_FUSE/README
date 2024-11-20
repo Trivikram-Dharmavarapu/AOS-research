@@ -1,0 +1,74 @@
+docker-compose build
+docker-compose up -d
+docker exec -it dind-container /bin/sh
+
+To verify CNTR:
+--------------
+ cntr --version
+
+To verify FSUE:
+--------------
+mkdir -p /mnt/fuse-test/lower /mnt/fuse-test/upper /mnt/fuse-test/work /mnt/fuse-test/merged
+echo "Hello, FUSE!" > /mnt/fuse-test/upper/testfile.txt
+fuse-overlayfs -o lowerdir=/mnt/fuse-test/lower,upperdir=/mnt/fuse-test/upper,workdir=/mnt/fuse-test/work /mnt/fuse-test/merged
+ls /mnt/fuse-test/merged
+
+# Clean up
+
+umount -l /mnt/fuse-test/merged
+rm -rf /mnt/fuse-test
+
+
+Running with SLIM:
+------------------
+
+    cd workspace/
+    docker build -t slim-sqlite -f Dockerfile.slim . # Runs appx. 40s
+    docker run -d --name slim-sqlite slim-sqlite
+
+    phoronix-test:
+    -------------
+    docker exec -it slim-sqlite phoronix-test-suite batch-setup # To save settings (Y,n,n,n,n,n,Y)
+    ./run_slim_tests.sh
+
+    sqlite-test:
+    -------------
+    docker exec slim-sqlite /usr/bin/time -v /workload.sh > ./slim_results/slim_sqlite.log 2>&1
+
+
+With SLIM + FAT (with debugging tools):
+---------------------------------------
+
+    docker build -t fat-debug -f Dockerfile.fat .  # Runs appx. 55s
+    docker run -d --name fat-debug fat-debug
+    cntr attach slim-sqlite fat-debug
+
+    phoronix-test:
+    -------------
+    ./run_fat_tests.sh
+
+    sqlite-test:
+    -------------
+    docker exec slim-sqlite /usr/bin/time -v /workload.sh > ./slim_fat_results/slim_with_fat.log 2>&1
+
+
+Dcoker Cleanup:
+
+    ./clean.sh
+
+
+
+Other docker commands:
+
+    docker stop <container>
+    docker rm <container>
+
+
+//
+docker network create my-network
+docker run -d --name apache-slim --network my-network -p 8081:80 slim-container
+docker run -d --name apache-fat --network my-network apache-fat
+docker exec -it apache-fat ab -n 1000 -c 10 http://apache-slim:80/
+
+
+

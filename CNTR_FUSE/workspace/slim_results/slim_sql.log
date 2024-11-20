@@ -5,19 +5,19 @@ Starting SQLite workload...
 SQLite workload completed.
 	Command being timed: "/workload.sh"
 	User time (seconds): 0.00
-	System time (seconds): 0.00
-	Percent of CPU this job got: 15%
-	Elapsed (wall clock) time (h:mm:ss or m:ss): 0:00.01
+	System time (seconds): 0.01
+	Percent of CPU this job got: 16%
+	Elapsed (wall clock) time (h:mm:ss or m:ss): 0:00.14
 	Average shared text size (kbytes): 0
 	Average unshared data size (kbytes): 0
 	Average stack size (kbytes): 0
 	Average total size (kbytes): 0
-	Maximum resident set size (kbytes): 4288
+	Maximum resident set size (kbytes): 4276
 	Average resident set size (kbytes): 0
 	Major (requiring I/O) page faults: 0
-	Minor (reclaiming a frame) page faults: 412
-	Voluntary context switches: 25
-	Involuntary context switches: 3
+	Minor (reclaiming a frame) page faults: 414
+	Voluntary context switches: 26
+	Involuntary context switches: 10
 	Swaps: 0
 	File system inputs: 0
 	File system outputs: 200

@@ -14,3 +14,6 @@ services:
       - /dev/fuse
     volumes:
       - ./workspace:/workspace
+      - /lib/modules:/lib/modules:ro  # Mount host kernel modules
+    environment:
+      - DOCKER_HOST=unix:///var/run/docker.sock  # Ensure Docker works properly inside the container

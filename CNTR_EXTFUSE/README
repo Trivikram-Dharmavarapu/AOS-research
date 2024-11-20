@@ -18,39 +18,44 @@ ls /mnt/fuse-test/merged
 umount -l /mnt/fuse-test/merged
 rm -rf /mnt/fuse-test
 
-Running:
--------
 
-with SLIM:
+Running with SLIM:
+------------------
+
     cd workspace/
-    docker build -t slim-sqlite -f Dockerfile.slim .
+    docker build -t slim-sqlite -f Dockerfile.slim . # Runs appx. 40s
     docker run -d --name slim-sqlite slim-sqlite
-    docker exec slim-sqlite /usr/bin/time -v /workload.sh > slim.log 2>&1
 
     phoronix-test:
     -------------
-    docker exec slim-sqlite phoronix-test-suite openbenchmarking-cli run pts/stream --options="1,2" --max-runs=1
     docker exec -it slim-sqlite phoronix-test-suite batch-setup # To save settings (Y,n,n,n,n,n,Y)
-    docker exec slim-sqlite phoronix-test-suite batch-run pts/stream --options="1,2"
-    docker exec slim-sqlite phoronix-test-suite show-result pts-fio
+    ./run_slim_tests.sh
 
+    sqlite-test:
+    -------------
+    docker exec slim-sqlite /usr/bin/time -v /workload.sh > ./slim_results/slim_sqlite.log 2>&1
 
 
 With SLIM + FAT (with debugging tools):
+---------------------------------------
 
-    docker build -t fat-debug -f Dockerfile.fat .
+    docker build -t fat-debug -f Dockerfile.fat .  # Runs appx. 55s
     docker run -d --name fat-debug fat-debug
     cntr attach slim-sqlite fat-debug
-    docker exec slim-sqlite /usr/bin/time -v /workload.sh > slim_with_fat.log 2>&1
 
-    #
+    phoronix-test:
+    -------------
+    ./run_fat_tests.sh
+
+    sqlite-test:
+    -------------
+    docker exec slim-sqlite /usr/bin/time -v /workload.sh > ./slim_fat_results/slim_with_fat.log 2>&1
+
 
 Dcoker Cleanup:
 
-    docker stop slim-sqlite fat-debug
-    docker rm slim-sqlite fat-debug
-    docker rmi slim-sqlite fat-debug
-    docker volume prune -f
+    ./clean.sh
+
 
 
 Other docker commands:

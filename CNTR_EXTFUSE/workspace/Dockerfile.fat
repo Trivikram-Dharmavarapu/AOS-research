@@ -3,7 +3,7 @@ FROM debian:latest
 
 # Install Phoronix Test Suite, debugging tools, and dependencies
 RUN apt-get update && \
-    apt-get install -y sqlite3 phoronix-test-suite curl unzip git gdb strace && \
+    apt-get install -y sqlite3 curl unzip git gdb strace && \
     apt-get clean
 
 # Add debugging tools to PATH for CNTR usage

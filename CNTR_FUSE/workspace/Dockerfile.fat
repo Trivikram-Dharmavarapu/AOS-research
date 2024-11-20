@@ -1,0 +1,13 @@
+# Base image using a lightweight Linux distribution
+FROM debian:latest
+
+# Install Phoronix Test Suite, debugging tools, and dependencies
+RUN apt-get update && \
+    apt-get install -y sqlite3 curl unzip git gdb strace && \
+    apt-get clean
+
+# Add debugging tools to PATH for CNTR usage
+ENV PATH="/usr/bin:${PATH}"
+
+# Keep the container running indefinitely
+ENTRYPOINT ["sh", "-c", "tail -f /dev/null"]
