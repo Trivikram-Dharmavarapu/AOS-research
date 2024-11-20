@@ -124,94 +124,126 @@ This guide provides steps to set up EXT FUSE on a Virtual Machine (VM) and test 
    cat /mnt/test-merged/testfile.txt
    ```
 
-## Step 5: Testing SLIM and FAT Containers Using Docker
+## Step 5: Contextual Integration of EXT FUSE and CNTR with SLIM/FAT Containers
 
-### Step 1: Create Dockerfiles
+### 1. EXT FUSE in the VM
 
-**Dockerfile.slim**
+EXT FUSE provides an extension framework for the FUSE (Filesystem in Userspace) interface. This is configured and tested on the VM to ensure the kernel supports it. The StackFS file system and the EXT FUSE framework ensure that the modified kernel-level FUSE driver and user-space EXT FUSE library work correctly. After verifying the EXT FUSE functionality with the StackFS file system on the VM, we move to test its interaction with containers.
 
-```dockerfile
-FROM ubuntu:22.04
-RUN apt-get update && apt-get install -y sqlite3 phoronix-test-suite
-COPY workload.sh /workload.sh
-CMD ["sqlite3"]
-```
+### 2. CNTR with SLIM and FAT Containers
 
-**Dockerfile.fat**
+CNTR is used to attach containers, enabling shared runtime resources and debugging workflows. Using SLIM (lightweight) and FAT (debug-heavy) containers, we simulate scenarios where EXT FUSE can be tested for performance and resource-sharing capabilities. EXT FUSE’s functionality can be indirectly tested by:
 
-```dockerfile
-FROM ubuntu:22.04
-RUN apt-get update && apt-get install -y gdb strace lsof net-tools vim
-CMD ["bash"]
-```
+- Mounting EXT FUSE-backed file systems (e.g., StackFS) in SLIM/FAT containers.
+- Using CNTR to attach and share file systems across SLIM/FAT containers.
+- Running tests in containers that stress EXT FUSE operations.
 
-### Step 2: Build and Run Containers
+### How to Test EXT FUSE with CNTR and SLIM/FAT Containers
 
-1. Build the SLIM container:
+#### Setup EXT FUSE-Backed File System in the VM:
+
+1. Ensure EXT FUSE and StackFS are configured and tested on the VM as outlined in Step 4 of the EXT FUSE setup.
+2. Mount the EXT FUSE-backed StackFS file system to a directory, e.g., `/mnt/extfuse-test`.
+
+#### Expose the EXT FUSE File System to Docker:
+
+1. Start Docker with access to the EXT FUSE file system:
 
    ```bash
-   docker build -t slim-image -f Dockerfile.slim .
+   sudo docker run --privileged -v /mnt/extfuse-test:/mnt/extfuse-test -d --name docker-host docker:dind
    ```
 
-2. Build the FAT container:
+   This step ensures that containers can access the EXT FUSE-backed file system.
+
+#### Build SLIM and FAT Containers:
+
+1. Build the SLIM and FAT containers as described in Step 5 using Dockerfile.slim and Dockerfile.fat.
+
+#### Test SLIM Container:
+
+1. Run the SLIM container and mount the EXT FUSE file system:
 
    ```bash
-   docker build -t fat-image -f Dockerfile.fat .
+   docker run -d --name slim-container -v /mnt/extfuse-test:/mnt/test slim-image
    ```
 
-3. Run the SLIM container:
+2. Inside the SLIM container, test EXT FUSE functionality:
 
    ```bash
-   docker run -d --name slim-container slim-image
+   docker exec slim-container ls /mnt/test
+   docker exec slim-container cat /mnt/test/testfile.txt
    ```
 
-4. Run the FAT container and attach it to the SLIM container:
+#### Test FAT Container:
+
+1. Run the FAT container and mount the EXT FUSE file system:
 
    ```bash
-   docker run -d --name fat-container fat-image
+   docker run -d --name fat-container -v /mnt/extfuse-test:/mnt/test fat-image
+   ```
+
+#### Attach SLIM and FAT Containers with CNTR:
+
+1. Use CNTR to attach the SLIM and FAT containers:
+
+   ```bash
    cntr attach slim-container fat-container
    ```
 
-### Step 3: Run Tests
-
-**Phoronix Test**
-
-1. Run the batch setup:
+2. Verify EXT FUSE functionality in the shared runtime by performing read/write tests from both containers:
 
    ```bash
-   docker exec -it slim-container phoronix-test-suite batch-setup
+   docker exec slim-container echo "Updated from SLIM" >> /mnt/test/testfile.txt
+   docker exec fat-container cat /mnt/test/testfile.txt
    ```
 
-2. Execute the SLIM tests:
+#### Run Performance and Debugging Tests:
 
-   ```bash
-   ./run_slim_tests.sh
-   ```
+1. Use the mounted EXT FUSE file system for Phoronix and SQLite tests as described in Step 5 of the SLIM and FAT container testing guide.
 
-**SQLite Test**
+#### Containerized File System Testing:
 
-1. Execute tests for SLIM:
+EXT FUSE is designed to optimize and extend FUSE file systems. By mounting EXT FUSE-backed file systems in SLIM and FAT containers, you validate its real-world application in isolated and resource-constrained environments.
 
-   ```bash
-   docker exec slim-container /usr/bin/time -v /workload.sh > ./slim_results/slim_sqlite.log 2>&1
-   ```
+#### CNTR for Shared Runtime:
 
-2. Execute tests for SLIM + FAT:
+CNTR enables the sharing of runtime resources (e.g., EXT FUSE file systems) between containers, making it easier to test scenarios where multiple containers interact with the same file system.
 
-   ```bash
-   docker exec slim-container /usr/bin/time -v /workload.sh > ./slim_fat_results/slim_with_fat.log 2>&1
-   ```
+#### Debugging and Performance:
 
-### Step 4: Clean Up
+FAT containers provide debugging tools, while SLIM containers focus on lightweight performance testing. This dichotomy allows you to test EXT FUSE under both production-like and development/debugging conditions.
 
-1. Stop and remove containers:
+## Step 6: End-to-End Workflow Summary
+
+### VM Setup:
+
+- Configure and verify EXT FUSE and StackFS functionality.
+- Mount the EXT FUSE-backed file system.
+
+### Container Setup:
+
+- Build SLIM and FAT containers.
+- Run containers with access to the EXT FUSE-backed file system.
+
+### CNTR Testing:
+
+- Attach SLIM and FAT containers using CNTR.
+- Verify EXT FUSE functionality in shared runtime scenarios.
+
+### Performance and Debugging:
+
+- Run Phoronix and SQLite tests within the containers.
+
+### Clean Up:
+
+1. Stop and remove all containers:
 
    ```bash
    docker stop slim-container fat-container
    docker rm slim-container fat-container
    ```
 
-2. Remove test directories:
+2. Unmount EXT FUSE-backed file systems:
 
    ```bash
    rm -rf /mnt/test-lower /mnt/test-upper /mnt/test-work /mnt/test-merged
