@@ -1,12 +1,12 @@
 version: '3.8'
 
 services:
-  dind-container:
+  extcntr-container:
     build:
       context: .
-      dockerfile: Dockerfile.cntr
-    image: cntr-dind-container
-    container_name: dind-container
+      dockerfile: Dockerfile.extcntr
+    image: extcntr-dind-container
+    container_name: extcntr-container
     privileged: true
     cap_add:
       - SYS_ADMIN
@@ -15,5 +15,3 @@ services:
     volumes:
       - ./workspace:/workspace
       - /lib/modules:/lib/modules:ro  # Mount host kernel modules
-    environment:
-      - DOCKER_HOST=unix:///var/run/docker.sock  # Ensure Docker works properly inside the container

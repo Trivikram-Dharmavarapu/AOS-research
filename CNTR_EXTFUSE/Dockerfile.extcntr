@@ -1,7 +1,7 @@
 # Base image: Standard Linux distribution
 FROM debian:latest
 
-# Install dependencies for CNTR, FUSE3, and development tools
+# Install dependencies for CNTR, ExtFUSE, and development tools
 RUN apt-get update && \
     apt-get install -y --no-install-recommends \
         ca-certificates \
@@ -11,6 +11,8 @@ RUN apt-get update && \
         curl \
         bash \
         build-essential \
+        rustc \
+        cargo \
         docker.io && \
     apt-get clean && \
     rm -rf /var/lib/apt/lists/*
@@ -26,9 +28,14 @@ RUN git clone https://github.com/Mic92/cntr.git /opt/cntr && \
     cd /opt/cntr && \
     /root/.cargo/bin/cargo install --path .  # Install CNTR using Cargo
 
-# Configure FUSE to allow user access and add CNTR to PATH
+# Install ExtFUSE
+RUN git clone https://github.com/extfuse/extfuse.git /opt/extfuse && \
+    cd /opt/extfuse && \
+    make && make install
+
+# Configure FUSE to allow user access and add CNTR and ExtFUSE to PATH
 RUN echo 'user_allow_other' >> /etc/fuse.conf
-ENV PATH="/root/.cargo/bin:${PATH}"
+ENV PATH="/root/.cargo/bin:/opt/extfuse/bin:${PATH}"
 
 # Start Docker daemon on container startup and keep it running
 ENTRYPOINT ["sh", "-c", "dockerd & while (! docker stats --no-stream ); do sleep 1; done; tail -f /dev/null"]
