@@ -1,12 +1,12 @@
 version: '3.8'
 
 services:
-  extcntr-container:
+  cntr_extfuse:
     build:
       context: .
       dockerfile: Dockerfile.extcntr
-    image: extcntr-dind-container
-    container_name: extcntr-container
+    image: cntr_extfuse_image
+    container_name: cntr_extfuse
     privileged: true
     cap_add:
       - SYS_ADMIN
@@ -14,4 +14,3 @@ services:
       - /dev/fuse
     volumes:
       - ./workspace:/workspace
-      - /lib/modules:/lib/modules:ro  # Mount host kernel modules

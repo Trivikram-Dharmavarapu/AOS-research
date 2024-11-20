@@ -1,41 +1,39 @@
-# Base image: Standard Linux distribution
-FROM debian:latest
+FROM ubuntu:22.04
 
-# Install dependencies for CNTR, ExtFUSE, and development tools
-RUN apt-get update && \
-    apt-get install -y --no-install-recommends \
-        ca-certificates \
-        fuse3 \
-        fuse-overlayfs \
-        git \
-        curl \
-        bash \
-        build-essential \
-        rustc \
-        cargo \
-        docker.io && \
-    apt-get clean && \
-    rm -rf /var/lib/apt/lists/*
+# Install dependencies
+RUN apt-get update && apt-get install -y \
+    build-essential git curl clang llvm cmake linux-headers-generic fuse libfuse2 bison flex libncurses5-dev libssl-dev bc
 
-# Install Rustup to manage Rust versions
-RUN curl https://sh.rustup.rs -sSf | bash -s -- -y && \
-    export PATH="/root/.cargo/bin:$PATH" && \
-    rustup install stable && \
-    rustup default stable
+# Clone and configure Linux kernel
+RUN git clone --branch ExtFUSE-1.0 https://github.com/extfuse/linux /opt/linux && \
+    cd /opt/linux && \
+    make defconfig && \
+    scripts/config --enable CONFIG_BPF_SYSCALL && \
+    scripts/config --module CONFIG_FUSE_FS && \
+    scripts/config --enable CONFIG_FUSE_FS_EXTENSIONS && \
+    make -j$(nproc) && \
+    make install -j$(nproc) && \
+    make headers_install INSTALL_HDR_PATH=/usr/local/include
 
-# Install CNTR from the latest source on GitHub
+# Clone and build EXT FUSE
+RUN git clone https://github.com/extfuse/extfuse /opt/extfuse && \
+    cd /opt/extfuse && \
+    export EXTFUSE_REPO_PATH=$(pwd) && \
+    LLC=llc-3.8 CLANG=clang-3.8 make
+
+# Clone and build CNTR
 RUN git clone https://github.com/Mic92/cntr.git /opt/cntr && \
     cd /opt/cntr && \
-    /root/.cargo/bin/cargo install --path .  # Install CNTR using Cargo
+    cargo install --path . && \
+    cntr --version
 
-# Install ExtFUSE
-RUN git clone https://github.com/extfuse/extfuse.git /opt/extfuse && \
-    cd /opt/extfuse && \
-    make && make install
-
-# Configure FUSE to allow user access and add CNTR and ExtFUSE to PATH
+# Configure FUSE to allow user access and add required PATH
 RUN echo 'user_allow_other' >> /etc/fuse.conf
-ENV PATH="/root/.cargo/bin:/opt/extfuse/bin:${PATH}"
+ENV PATH="/usr/local/bin:${PATH}"
 
-# Start Docker daemon on container startup and keep it running
-ENTRYPOINT ["sh", "-c", "dockerd & while (! docker stats --no-stream ); do sleep 1; done; tail -f /dev/null"]
+# Set up workspace directory for testing
+RUN mkdir -p /workspace
+WORKDIR /workspace
+
+# Keep container running
+CMD ["bash"]

@@ -1,6 +1,6 @@
 docker-compose build
 docker-compose up -d
-docker exec -it dind-container /bin/sh
+docker exec -it cntr_fuse /bin/sh
 
 To verify CNTR:
 --------------
@@ -10,8 +10,9 @@ To verify FSUE:
 --------------
 mkdir -p /mnt/fuse-test/lower /mnt/fuse-test/upper /mnt/fuse-test/work /mnt/fuse-test/merged
 echo "Hello, FUSE!" > /mnt/fuse-test/upper/testfile.txt
-fuse-overlayfs -o lowerdir=/mnt/fuse-test/lower,upperdir=/mnt/fuse-test/upper,workdir=/mnt/fuse-test/work /mnt/fuse-test/merged
+fuse-overlayfs -o lowerdir=/mnt/fuse-test/lower,upperdir=/mnt/fuse-test/upper,workdir=/mnt/fuse-test/work /mnt/fuse-test/merged # extected warnign "unknown argument ignored: lazytime"
 ls /mnt/fuse-test/merged
+cat /mnt/fuse-test/merged/testfile.txt
 
 # Clean up
 
@@ -23,25 +24,25 @@ Running with SLIM:
 ------------------
 
     cd workspace/
-    docker build -t slim-sqlite -f Dockerfile.slim . # Runs appx. 40s
-    docker run -d --name slim-sqlite slim-sqlite
+    docker build -t slim-image -f Dockerfile.slim . # Runs appx. 100s
+    docker run -d --name slim-container slim-image
 
     phoronix-test:
     -------------
-    docker exec -it slim-sqlite phoronix-test-suite batch-setup # To save settings (Y,n,n,n,n,n,Y)
+    docker exec -it slim-container phoronix-test-suite batch-setup # To save settings (Y,n,n,n,n,n,Y)
     ./run_slim_tests.sh
 
     sqlite-test:
     -------------
-    docker exec slim-sqlite /usr/bin/time -v /workload.sh > ./slim_results/slim_sqlite.log 2>&1
+    docker exec slim-container /usr/bin/time -v /workload.sh > ./slim_results/slim_sqlite.log 2>&1
 
 
 With SLIM + FAT (with debugging tools):
 ---------------------------------------
 
-    docker build -t fat-debug -f Dockerfile.fat .  # Runs appx. 55s
-    docker run -d --name fat-debug fat-debug
-    cntr attach slim-sqlite fat-debug
+    docker build -t fat-image -f Dockerfile.fat .  # Runs appx. 55s
+    docker run -d --name fat-container fat-image
+    cntr attach slim-container fat-container
 
     phoronix-test:
     -------------
@@ -49,7 +50,7 @@ With SLIM + FAT (with debugging tools):
 
     sqlite-test:
     -------------
-    docker exec slim-sqlite /usr/bin/time -v /workload.sh > ./slim_fat_results/slim_with_fat.log 2>&1
+    docker exec slim-container /usr/bin/time -v /workload.sh > ./slim_fat_results/slim_with_fat.log 2>&1
 
 
 Dcoker Cleanup:

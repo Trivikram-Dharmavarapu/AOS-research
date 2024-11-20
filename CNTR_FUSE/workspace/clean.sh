@@ -1,4 +1,4 @@
-docker stop slim-sqlite fat-debug
-docker rm slim-sqlite fat-debug
-docker rmi slim-sqlite fat-debug
+docker stop slim-container fat-container
+docker rm slim-container fat-container
+docker rmi slim-image fat-image
 docker volume prune -f

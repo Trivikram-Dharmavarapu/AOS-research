@@ -1,19 +1,18 @@
 version: '3.8'
 
 services:
-  dind-container:
+  cntr_fuse:
     build:
       context: .
       dockerfile: Dockerfile.cntr
-    image: cntr-dind-container
-    container_name: dind-container
-    privileged: true
+    image: cntr_fuse_image
+    container_name: cntr_fuse
+    privileged: true  # Required for Docker-in-Docker
     cap_add:
       - SYS_ADMIN
     devices:
       - /dev/fuse
     volumes:
-      - ./workspace:/workspace
-      - /lib/modules:/lib/modules:ro  # Mount host kernel modules
-    environment:
-      - DOCKER_HOST=unix:///var/run/docker.sock  # Ensure Docker works properly inside the container
+      - ./workspace:/workspace  # Workspace directory for slim and fat container files
+    stdin_open: true
+    tty: true
