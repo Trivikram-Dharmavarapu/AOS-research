@@ -6,12 +6,9 @@ To verify CNTR:
 --------------
  cntr --version
 
-To verify FSUE:
+To verify EXTFSUE:
 --------------
-mkdir -p /mnt/fuse-test/lower /mnt/fuse-test/upper /mnt/fuse-test/work /mnt/fuse-test/merged
-echo "Hello, FUSE!" > /mnt/fuse-test/upper/testfile.txt
-fuse-overlayfs -o lowerdir=/mnt/fuse-test/lower,upperdir=/mnt/fuse-test/upper,workdir=/mnt/fuse-test/work /mnt/fuse-test/merged
-ls /mnt/fuse-test/merged
+Yet To Do
 
 # Clean up
 
